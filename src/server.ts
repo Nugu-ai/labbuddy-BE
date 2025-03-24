@@ -9,6 +9,8 @@ import swaggerFile from "../swagger-output.json";
 
 import testRoute from "./routes/test";
 import authRoute from "./routes/auth";
+import analyzeRoute from "./routes/analyze";
+import adminRoute from "./routes/admin";
 
 import connectDB from "./database/db";
 import { errorHandler } from "./middleware/errorHandler";
@@ -27,6 +29,8 @@ app.use(cors());
 
 app.use("/test", testRoute);
 app.use("/auth", authRoute);
+app.use("/analyze", analyzeRoute);
+app.use("/admin", adminRoute);
 app.use(
     "/api-docs",
     swaggerUi.serve,

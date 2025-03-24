@@ -19,6 +19,10 @@
         {
             "name": "auth",
             "description": "Authentication related endpoints"
+        },
+        {
+            "name": "analyze",
+            "description": "Analyze related endpoints"
         }
     ],
     "paths": {
@@ -134,6 +138,150 @@
                     },
                     "401": {
                         "description": "Invalid or missing access token"
+                    }
+                }
+            }
+        },
+        "/analyze/upload": {
+            "post": {
+                "tags": ["analyze"],
+                "summary": "Upload PDF and start analysis",
+                "description": "Uploads a PDF file, stores it on S3, and triggers Gemini LLM to extract reagent info.",
+                "security": [{ "bearerAuth": [] }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "PDF file to analyze"
+                                    }
+                                },
+                                "required": ["file"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Session created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "session_id": {
+                                            "type": "string",
+                                            "example": "a3f4d91c-7e9a-4db1-8f64-0012ef2d3c3d"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing file or invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/analyze/result/{session_id}": {
+            "get": {
+                "tags": ["analyze"],
+                "summary": "Get analysis result by session ID",
+                "description": "Returns the extracted reagent info for a given session. If not authenticated, catalog info is hidden.",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "security": [{ "bearerAuth": [] }],
+                "responses": {
+                    "200": {
+                        "description": "Result found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "session_id": { "type": "string" },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "processing",
+                                                "done",
+                                                "failed"
+                                            ]
+                                        },
+                                        "results": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "company": {
+                                                        "type": "string"
+                                                    },
+                                                    "reagent": {
+                                                        "type": "string"
+                                                    },
+                                                    "catalog": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found"
+                    }
+                }
+            }
+        },
+        "/analyze/result/{session_id}/csv": {
+            "get": {
+                "tags": ["analyze"],
+                "summary": "Download CSV of extracted results",
+                "description": "Returns extracted result as CSV file. Requires authentication for catalog field.",
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "security": [{ "bearerAuth": [] }],
+                "responses": {
+                    "200": {
+                        "description": "CSV file stream",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found or no results"
+                    },
+                    "409": {
+                        "description": "Result not ready yet"
                     }
                 }
             }
