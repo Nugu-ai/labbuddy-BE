@@ -11,6 +11,7 @@ import testRoute from "./routes/test";
 import authRoute from "./routes/auth";
 
 import connectDB from "./database/db";
+import { errorHandler } from "./middleware/errorHandler";
 
 dotenv.config();
 
@@ -31,6 +32,8 @@ app.use(
     swaggerUi.serve,
     swaggerUi.setup(swaggerFile, { explorer: true })
 );
+
+app.use(errorHandler);
 
 const httpServer = createServer(app);
 

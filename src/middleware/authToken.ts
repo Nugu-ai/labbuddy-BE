@@ -41,7 +41,11 @@ export const authToken = (
         // JwtPayload를 UserPayload로 캐스팅
         const userPayload = accessTokenResult.key as UserPayload;
 
-        if (!userPayload.id || !userPayload.username || !userPayload.email) {
+        if (
+            !userPayload.id ||
+            !userPayload.email ||
+            !userPayload.google_user_id
+        ) {
             res.status(401).json({
                 code: 4012,
                 message: "Invalid token payload",
