@@ -18,7 +18,6 @@ router.post("/login", async (req: Request, res: Response): Promise<any> => {
     if (!google_access_token) {
         throw new HttpError(400, 4001, "google_access_token is required");
     }
-
     const googleUser = await verifyGoogleAccessToken(google_access_token);
     const { sub: google_user_id, email } = googleUser;
 

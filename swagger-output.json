@@ -33,9 +33,112 @@
                     }
                 }
             }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": ["auth"],
+                "summary": "Google 로그인 및 회원가입",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "google_access_token": { "type": "string" },
+                                    "phone_number": { "type": "string" }
+                                },
+                                "required": ["google_access_token"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": { "type": "string" },
+                                        "refresh_token": { "type": "string" },
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": { "type": "string" },
+                                                "email": { "type": "string" },
+                                                "phone_number": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid input"
+                    }
+                }
+            }
+        },
+        "/auth/token": {
+            "post": {
+                "tags": ["auth"],
+                "summary": "Access token 재발급",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "refresh_token": { "type": "string" }
+                                },
+                                "required": ["refresh_token"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token refreshed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": { "type": "string" },
+                                        "refresh_token": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token"
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": ["auth"],
+                "summary": "로그아웃 (refresh token 삭제)",
+                "security": [{ "bearerAuth": [] }],
+                "responses": {
+                    "204": {
+                        "description": "Logged out successfully"
+                    },
+                    "401": {
+                        "description": "Invalid or missing access token"
+                    }
+                }
+            }
         }
     },
-
     "components": {
         "securitySchemes": {
             "bearerAuth": {
