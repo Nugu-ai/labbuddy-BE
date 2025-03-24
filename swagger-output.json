@@ -1,0 +1,48 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "My API",
+        "version": "1.0.0",
+        "description": "A sample API"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Local server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "test",
+            "description": "test endpoint"
+        },
+        {
+            "name": "auth",
+            "description": "Authentication related endpoints"
+        }
+    ],
+    "paths": {
+        "/test": {
+            "get": {
+                "tags": ["test"],
+                "summary": "Test endpoint",
+                "description": "Test endpoint for testing",
+                "responses": {
+                    "200": {
+                        "description": "Test response"
+                    }
+                }
+            }
+        }
+    },
+
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}
