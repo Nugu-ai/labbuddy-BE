@@ -50,7 +50,8 @@
                                 "type": "object",
                                 "properties": {
                                     "google_access_token": { "type": "string" },
-                                    "phone_number": { "type": "string" }
+                                    "phone_number": { "type": "string" },
+                                    "source_path": { "type": "string" }
                                 },
                                 "required": ["google_access_token"]
                             }

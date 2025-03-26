@@ -13,7 +13,7 @@ import { authToken, UserRequest } from "../middleware/authToken";
 const router = express.Router();
 
 router.post("/login", async (req: Request, res: Response): Promise<any> => {
-    const { google_access_token, phone_number } = req.body;
+    const { google_access_token, phone_number, source_path } = req.body;
 
     if (!google_access_token) {
         throw new HttpError(400, 4001, "google_access_token is required");
@@ -35,22 +35,30 @@ router.post("/login", async (req: Request, res: Response): Promise<any> => {
                 "phone_number is required for signup"
             );
         }
-        user = await createUser(email, google_user_id, phone_number);
+
+        if (!source_path) {
+            throw new HttpError(
+                400,
+                4004,
+                "source_path is required for signup"
+            );
+        }
+        await createUser(email, google_user_id, phone_number, source_path);
     }
 
     const { accessToken, refreshToken } = await issueTokens({
-        id: user._id?.toString() as string,
-        email: user.email as string,
-        google_user_id: user.google_user_id as string,
+        id: user!._id?.toString() as string,
+        email: user!.email as string,
+        google_user_id: user!.google_user_id as string,
     });
 
     return res.json({
         access_token: accessToken,
         refresh_token: refreshToken,
         user: {
-            id: user._id,
-            email: user.email,
-            phone_number: user.phone_number,
+            id: user!._id,
+            email: user!.email,
+            phone_number: user!.phone_number,
         },
     });
 });
