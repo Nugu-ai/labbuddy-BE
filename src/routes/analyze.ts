@@ -26,7 +26,7 @@ router.post(
             if (!req.file) {
                 return res
                     .status(400)
-                    .json({ code: 4001, message: "PDF file is required" });
+                    .json({ code: 4006, message: "PDF file is required" });
             }
 
             const userId = req.user?.id ?? null;
@@ -100,6 +100,11 @@ router.get(
         const session = await getSessionById(sessionId);
         if (!session) {
             throw new HttpError(404, 4041, "Session not found");
+        }
+
+        if (session.status === "failed") {
+            // ✅ LLM 처리 실패 시 예외 반환
+            throw new HttpError(422, 4220, "LLM processing failed");
         }
 
         const results = await getResultsBySessionId(sessionId);

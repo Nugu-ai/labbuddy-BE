@@ -39,7 +39,7 @@ router.post("/login", async (req: Request, res: Response): Promise<any> => {
         if (!source_path) {
             throw new HttpError(
                 400,
-                4004,
+                4005,
                 "source_path is required for signup"
             );
         }
