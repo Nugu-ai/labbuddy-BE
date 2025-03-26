@@ -19,7 +19,7 @@ router.post("/login", async (req: Request, res: Response): Promise<any> => {
         throw new HttpError(400, 4001, "google_access_token is required");
     }
     const googleUser = await verifyGoogleAccessToken(google_access_token);
-    const { sub: google_user_id, email } = googleUser;
+    const { sub: google_user_id, email, name } = googleUser;
 
     if (!google_user_id || !email) {
         throw new HttpError(400, 4002, "Invalid Google user info");
@@ -43,13 +43,20 @@ router.post("/login", async (req: Request, res: Response): Promise<any> => {
                 "source_path is required for signup"
             );
         }
-        await createUser(email, google_user_id, phone_number, source_path);
+        await createUser(
+            email,
+            google_user_id,
+            phone_number,
+            source_path,
+            name
+        );
     }
 
     const { accessToken, refreshToken } = await issueTokens({
         id: user!._id?.toString() as string,
         email: user!.email as string,
         google_user_id: user!.google_user_id as string,
+        is_admin: user!.is_admin as boolean,
     });
 
     return res.json({
@@ -57,8 +64,12 @@ router.post("/login", async (req: Request, res: Response): Promise<any> => {
         refresh_token: refreshToken,
         user: {
             id: user!._id,
+            name: user!.name,
             email: user!.email,
             phone_number: user!.phone_number,
+            created_at: user!.created_at,
+            source_path: user!.source_path,
+            is_admin: user!.is_admin,
         },
     });
 });

@@ -6,6 +6,7 @@ export interface UserPayload extends JwtPayload {
     id: string;
     email: string;
     google_user_id: string;
+    is_admin: boolean;
 }
 
 export interface UserRequest extends Request {

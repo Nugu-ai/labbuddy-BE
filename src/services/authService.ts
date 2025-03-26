@@ -16,12 +16,14 @@ export const createUser = async (
     email: string,
     google_user_id: string,
     phone_number: string,
-    source_path: string
+    source_path: string,
+    name?: string // ✅ 추가
 ) => {
     const newUser = new User({
         email,
         google_user_id,
         phone_number,
+        name, // ✅ 저장
         created_at: new Date(),
         source_path,
     });
@@ -33,6 +35,7 @@ export const issueTokens = async (user: {
     id: string;
     email: string;
     google_user_id: string;
+    is_admin: boolean;
 }) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user.id);
@@ -64,6 +67,7 @@ export const refreshUserToken = async (refreshToken: string) => {
         id: user._id?.toString() as string,
         email: user.email,
         google_user_id: user.google_user_id,
+        is_admin: user.is_admin,
     });
 
     const newRefreshToken = await generateRefreshToken(

@@ -14,15 +14,19 @@ interface JwtVerifyResult {
     message?: string;
 }
 
-export const generateAccessToken = (user: {
+export interface TokenPayload {
     id: string;
     email: string;
     google_user_id: string;
-}): string => {
+    is_admin: boolean;
+}
+
+export const generateAccessToken = (user: TokenPayload): string => {
     const payload = {
         id: user.id,
         email: user.email,
         google_user_id: user.google_user_id,
+        is_admin: user.is_admin,
     };
 
     return jwt.sign(payload, secret, {

@@ -23,6 +23,10 @@
         {
             "name": "analyze",
             "description": "Analyze related endpoints"
+        },
+        {
+            "name": "admin",
+            "description": "Admin related endpoints"
         }
     ],
     "paths": {
@@ -283,6 +287,94 @@
                     },
                     "409": {
                         "description": "Result not ready yet"
+                    }
+                }
+            }
+        },
+        "/admin/summary": {
+            "get": {
+                "tags": ["admin"],
+                "summary": "관리자 요약 정보 조회",
+                "description": "전체 사용자 목록, 논문 목록 및 추출된 시약 결과를 관리자 권한으로 조회합니다.",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "요약 정보 조회 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "users": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "email": {
+                                                        "type": "string"
+                                                    },
+                                                    "phone_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "source_path": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "papers": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "paper_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "session_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "results": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "company": {
+                                                                    "type": "string"
+                                                                },
+                                                                "reagent": {
+                                                                    "type": "string"
+                                                                },
+                                                                "catalog": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "관리자 권한 없음",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": { "type": "integer" },
+                                        "message": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
