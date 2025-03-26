@@ -9,6 +9,10 @@
         {
             "url": "http://localhost:8000",
             "description": "Local server"
+        },
+        {
+            "url": "http://13.124.93.149:8000",
+            "description": "aws Production http server"
         }
     ],
     "tags": [
