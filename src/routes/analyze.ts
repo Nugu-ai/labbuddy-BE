@@ -13,6 +13,7 @@ import { optionalAuth } from "../middleware/optionalAuth";
 import Paper from "../models/Paper";
 import { getFileHash } from "../utils/getFileHash";
 import fs from "fs";
+import { extractTitleWithGemini } from "../utils/extractTitle";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" }); // 로컬 temp 저장
@@ -47,6 +48,12 @@ router.post(
             // ✅ 텍스트 추출 먼저
             const extractedText = await extractTextFromPDF(req.file.path);
 
+            // 2. 제목 추출 시도
+            let paperName = await extractTitleWithGemini(extractedText);
+            if (!paperName) {
+                paperName = req.file.originalname; // fallback
+            }
+
             // ✅ S3 업로드
             const s3Path = await uploadToS3(req.file, sessionId);
 
@@ -54,7 +61,7 @@ router.post(
             await saveSession({
                 session_id: sessionId,
                 user_id: userId as string,
-                paper_name: req.file.originalname,
+                paper_name: paperName,
                 s3_path: s3Path,
                 uploaded_at: new Date(),
                 status: "processing",
@@ -105,6 +112,16 @@ router.get(
         if (session.status === "failed") {
             // ✅ LLM 처리 실패 시 예외 반환
             throw new HttpError(422, 4220, "LLM processing failed");
+        }
+
+        if (session.status === "processing") {
+            return res.status(202).json({
+                code: 2020,
+                message: "LLM processing is still in progress",
+                session_id: session.session_id,
+                status: session.status,
+                results: [],
+            });
         }
 
         const results = await getResultsBySessionId(sessionId);
