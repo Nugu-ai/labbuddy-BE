@@ -7,6 +7,7 @@ interface CreateSessionInput {
     s3_path: string;
     uploaded_at: Date;
     status: "processing" | "done" | "failed";
+    file_hash: string;
 }
 
 export const saveSession = async (
@@ -19,6 +20,7 @@ export const saveSession = async (
         s3_path: data.s3_path,
         uploaded_at: data.uploaded_at,
         status: data.status,
+        file_hash: data.file_hash,
     });
 
     return await session.save();

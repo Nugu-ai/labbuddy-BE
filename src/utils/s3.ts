@@ -27,13 +27,13 @@ export const uploadToS3 = async (
         Key: key,
         Body: fileContent,
         ContentType: file.mimetype,
-        ACL: "public-read", // 필요에 따라 private로 변경
+        // ACL: "public-read", // 필요에 따라 private로 변경
     };
 
     const data = await s3.upload(params).promise();
 
-    // 파일 업로드 후 로컬에 임시 저장된 파일 삭제
-    fs.unlinkSync(file.path);
+    // // 파일 업로드 후 로컬에 임시 저장된 파일 삭제
+    // fs.unlinkSync(file.path);
 
     return data.Location; // S3 파일 URL
 };

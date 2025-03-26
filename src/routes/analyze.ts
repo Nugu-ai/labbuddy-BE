@@ -9,14 +9,17 @@ import { callLLM } from "../utils/callLLM"; // LLM 호출 함수
 import { saveSession, getSessionById } from "../services/sessonService"; // DB 저장
 import { getResultsBySessionId } from "../services/resultService";
 import { authToken, UserRequest } from "../middleware/authToken";
+import { optionalAuth } from "../middleware/optionalAuth";
 import Paper from "../models/Paper";
+import { getFileHash } from "../utils/getFileHash";
+import fs from "fs";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" }); // 로컬 temp 저장
 
 router.post(
     "/upload",
-    authToken,
+    optionalAuth,
     upload.single("file"),
     async (req: UserRequest, res: Response): Promise<any> => {
         try {
@@ -26,38 +29,57 @@ router.post(
                     .json({ code: 4001, message: "PDF file is required" });
             }
 
-            const userId = req.user?.id;
+            const userId = req.user?.id ?? null;
+            const fileHash = getFileHash(req.file.path);
+
+            // ✅ 중복 확인
+            const existing = await Paper.findOne({ file_hash: fileHash });
+            if (existing) {
+                fs.unlinkSync(req.file.path); // 임시 파일 삭제
+                return res.status(200).json({
+                    session_id: existing.session_id,
+                    duplicated: true,
+                });
+            }
+
             const sessionId = uuidv4();
 
-            // 1. S3 업로드
-            const s3Path = await uploadToS3(req.file, sessionId);
-
-            // 2. PDF 텍스트 추출
+            // ✅ 텍스트 추출 먼저
             const extractedText = await extractTextFromPDF(req.file.path);
 
-            // 3. DB에 세션 저장
+            // ✅ S3 업로드
+            const s3Path = await uploadToS3(req.file, sessionId);
+
+            // ✅ 세션 저장
             await saveSession({
                 session_id: sessionId,
                 user_id: userId as string,
                 paper_name: req.file.originalname,
                 s3_path: s3Path,
                 uploaded_at: new Date(),
-                status: "processing", // ✅ 추가
+                status: "processing",
+                file_hash: fileHash,
             });
 
-            // 4. LLM 비동기 처리 (파싱)
+            // ✅ 비동기 LLM 호출
             callLLM(sessionId, extractedText)
-                .then(() => {
-                    return Paper.updateOne(
+                .then(() =>
+                    Paper.updateOne(
                         { session_id: sessionId },
                         { status: "done" }
-                    );
-                })
+                    )
+                )
                 .catch((err) => {
                     console.error("LLM 처리 실패:", err);
+                    return Paper.updateOne(
+                        { session_id: sessionId },
+                        { status: "failed" }
+                    );
                 });
 
-            return res.status(201).json({ session_id: sessionId });
+            return res
+                .status(201)
+                .json({ session_id: sessionId, duplicated: false });
         } catch (err: any) {
             console.error(err);
             return res.status(500).json({
@@ -71,7 +93,7 @@ router.post(
 
 router.get(
     "/result/:session_id",
-    authToken,
+    optionalAuth,
     async (req: UserRequest, res: Response): Promise<any> => {
         const sessionId = req.params.session_id;
 
