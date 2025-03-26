@@ -14,6 +14,8 @@ import Paper from "../models/Paper";
 import { getFileHash } from "../utils/getFileHash";
 import fs from "fs";
 import { extractTitleWithGemini } from "../utils/extractTitle";
+import { promisify } from "util";
+const unlinkAsync = promisify(fs.unlink); // 비동기 unlink
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" }); // 로컬 temp 저장
@@ -39,7 +41,7 @@ router.post(
 
             const existing = await Paper.findOne({ file_hash: fileHash });
             if (existing) {
-                fs.unlinkSync(req.file.path);
+                await unlinkAsync(req.file.path); // ✅ 중복일 경우 삭제
                 return res.status(200).json({
                     session_id: existing.session_id,
                     duplicated: true,
@@ -55,6 +57,9 @@ router.post(
             }
 
             const s3Path = await uploadToS3(req.file, sessionId);
+
+            // ✅ S3 업로드 후 로컬 임시 파일 삭제
+            await unlinkAsync(req.file.path);
 
             await saveSession({
                 session_id: sessionId,
@@ -90,7 +95,7 @@ router.post(
                 .status(201)
                 .json({ session_id: sessionId, duplicated: false });
         } catch (err) {
-            next(err); // ✅ 핵심
+            next(err);
         }
     }
 );
