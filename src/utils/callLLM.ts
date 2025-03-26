@@ -18,7 +18,14 @@ export const callLLM = async (
     sessionId: string,
     text: string
 ): Promise<void> => {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        generationConfig: {
+            temperature: 0.3,
+            topP: 1,
+            maxOutputTokens: 2048,
+        },
+    });
     const prompt = `
     Text:
 ${text}

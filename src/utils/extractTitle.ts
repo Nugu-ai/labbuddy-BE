@@ -8,7 +8,14 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 export const extractTitleWithGemini = async (
     text: string
 ): Promise<string | null> => {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        generationConfig: {
+            temperature: 0.4,
+            topP: 1,
+            maxOutputTokens: 256,
+        },
+    });
 
     const prompt = `
 You are an AI that reads academic paper text and extracts the paper title.
