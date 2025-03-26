@@ -7,9 +7,17 @@ export const errorHandler = (
     res: Response,
     next: NextFunction
 ) => {
-    const status = err.statusCode || 500;
-    const code = err.code || 5000;
-    const message = err.message || "Internal server error";
+    console.error("❌ 서버 오류 발생:", err);
 
-    res.status(status).json({ code, message });
+    if (err instanceof HttpError) {
+        res.status(err.statusCode).json({
+            code: err.code,
+            message: err.message,
+        });
+    } else {
+        res.status(500).json({
+            code: 5000,
+            message: "Internal Server Error",
+        });
+    }
 };

@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import { saveResultGroupAndResults } from "../services/resultService";
+import Paper from "../models/Paper";
 import { raw } from "body-parser";
 
 dotenv.config();
@@ -59,7 +60,13 @@ Sigma-Aldrich,HCl,320331
                 }
                 return isValid;
             });
-
+        if (extractedData.length === 0) {
+            await Paper.updateOne(
+                { session_id: sessionId },
+                { status: "failed" }
+            );
+            return;
+        }
         await saveResultGroupAndResults(sessionId, extractedData);
     } catch (error) {
         console.error("Gemini API 호출 중 오류 발생:", error);
