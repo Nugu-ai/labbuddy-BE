@@ -13,10 +13,68 @@ import { authToken, UserRequest } from "../middleware/authToken";
 const router = express.Router();
 
 router.post(
-    "/login",
+    "/signup",
     async (req: Request, res: Response, next: NextFunction): Promise<any> => {
         try {
             const { google_access_token, phone_number, source_path } = req.body;
+
+            if (!google_access_token || !phone_number || !source_path) {
+                throw new HttpError(400, 4001, "Missing required fields");
+            }
+
+            const googleUser = await verifyGoogleAccessToken(
+                google_access_token
+            );
+            const { sub: google_user_id, email, name } = googleUser;
+
+            if (!google_user_id || !email) {
+                throw new HttpError(400, 4002, "Invalid Google user info");
+            }
+
+            const existingUser = await findUserByGoogleId(google_user_id);
+            if (existingUser) {
+                throw new HttpError(409, 4091, "User already exists");
+            }
+
+            const user = await createUser(
+                email,
+                google_user_id,
+                phone_number,
+                source_path,
+                name
+            );
+
+            const { accessToken, refreshToken } = await issueTokens({
+                id: user._id?.toString() as string,
+                email: user.email as string,
+                google_user_id: user.google_user_id as string,
+                is_admin: user.is_admin,
+            });
+
+            return res.status(201).json({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    phone_number: user.phone_number,
+                    created_at: user.created_at,
+                    source_path: user.source_path,
+                    is_admin: user.is_admin,
+                },
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
+router.post(
+    "/login",
+    async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+        try {
+            const { google_access_token } = req.body;
 
             if (!google_access_token) {
                 throw new HttpError(
@@ -29,45 +87,22 @@ router.post(
             const googleUser = await verifyGoogleAccessToken(
                 google_access_token
             );
-            const { sub: google_user_id, email, name } = googleUser;
+            const { sub: google_user_id, email } = googleUser;
 
             if (!google_user_id || !email) {
                 throw new HttpError(400, 4002, "Invalid Google user info");
             }
 
-            let user = await findUserByGoogleId(google_user_id);
-
+            const user = await findUserByGoogleId(google_user_id);
             if (!user) {
-                if (!phone_number) {
-                    throw new HttpError(
-                        400,
-                        4003,
-                        "phone_number is required for signup"
-                    );
-                }
-
-                if (!source_path) {
-                    throw new HttpError(
-                        400,
-                        4005,
-                        "source_path is required for signup"
-                    );
-                }
-
-                user = await createUser(
-                    email,
-                    google_user_id,
-                    phone_number,
-                    source_path,
-                    name
-                );
+                throw new HttpError(404, 4040, "User not found");
             }
 
             const { accessToken, refreshToken } = await issueTokens({
                 id: user._id?.toString() as string,
                 email: user.email as string,
                 google_user_id: user.google_user_id as string,
-                is_admin: user.is_admin as boolean,
+                is_admin: user.is_admin,
             });
 
             return res.json({

@@ -46,10 +46,11 @@
                 }
             }
         },
-        "/auth/login": {
+        "/auth/signup": {
             "post": {
                 "tags": ["auth"],
-                "summary": "Google 로그인 및 회원가입",
+                "summary": "User Signup",
+                "description": "Google access token으로 유저를 신규 회원가입합니다.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -61,14 +62,18 @@
                                     "phone_number": { "type": "string" },
                                     "source_path": { "type": "string" }
                                 },
-                                "required": ["google_access_token"]
+                                "required": [
+                                    "google_access_token",
+                                    "phone_number",
+                                    "source_path"
+                                ]
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "Login success",
+                    "201": {
+                        "description": "회원가입 성공",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -80,9 +85,20 @@
                                             "type": "object",
                                             "properties": {
                                                 "id": { "type": "string" },
+                                                "name": { "type": "string" },
                                                 "email": { "type": "string" },
                                                 "phone_number": {
                                                     "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "source_path": {
+                                                    "type": "string"
+                                                },
+                                                "is_admin": {
+                                                    "type": "boolean"
                                                 }
                                             }
                                         }
@@ -91,8 +107,69 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Missing or invalid input"
+                    "409": {
+                        "description": "이미 존재하는 유저"
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": ["auth"],
+                "summary": "User Login",
+                "description": "Google access token으로 기존 유저 로그인",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "google_access_token": { "type": "string" }
+                                },
+                                "required": ["google_access_token"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "로그인 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": { "type": "string" },
+                                        "refresh_token": { "type": "string" },
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": { "type": "string" },
+                                                "name": { "type": "string" },
+                                                "email": { "type": "string" },
+                                                "phone_number": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "source_path": {
+                                                    "type": "string"
+                                                },
+                                                "is_admin": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "유저를 찾을 수 없음"
                     }
                 }
             }
