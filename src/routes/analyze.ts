@@ -141,6 +141,7 @@ router.get(
 
             return res.json({
                 session_id: session.session_id,
+                paper_name: session.paper_name,
                 status: session.status,
                 results: formattedResults,
             });
