@@ -7,8 +7,13 @@ import {
     refreshUserToken,
     logoutUserById,
 } from "../services/authService";
+import axios from "axios";
+import qs from "qs";
 import { HttpError } from "../utils/HttpError";
 import { authToken, UserRequest } from "../middleware/authToken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const router = express.Router();
 
@@ -162,6 +167,55 @@ router.post(
             await logoutUserById(userId as string);
 
             return res.status(204).send(); // No Content
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
+router.get(
+    "/google/callback",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const code = req.query.code as string;
+            if (!code) {
+                throw new HttpError(400, 4007, "Google auth code is required");
+            }
+
+            // 1. 환경변수에서 직접 불러옴
+            const clientId = process.env.GOOGLE_CLIENT_ID!;
+            const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+            const redirectUri = process.env.GOOGLE_REDIRECT_URI!;
+            const frontendRedirect = process.env.FRONTEND_REDIRECT_URL!;
+
+            console.log("redirectURI:", redirectUri);
+            // 2. 토큰 요청
+            const tokenRes = await axios.post(
+                "https://oauth2.googleapis.com/token",
+                qs.stringify({
+                    code,
+                    client_id: clientId,
+                    client_secret: clientSecret,
+                    redirect_uri: redirectUri,
+                    grant_type: "authorization_code",
+                }),
+                {
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                }
+            );
+
+            const accessToken = tokenRes.data.access_token;
+            if (!accessToken) {
+                throw new HttpError(400, 4008, "Failed to get access token");
+            }
+            console.log("Access Token:", accessToken);
+
+            // 3. 프론트로 리다이렉트
+            return res.redirect(
+                `${frontendRedirect}?google_access_token=${accessToken}`
+            );
         } catch (err) {
             next(err);
         }
