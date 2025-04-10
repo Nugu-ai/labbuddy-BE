@@ -131,12 +131,12 @@ router.get(
             }
 
             const results = await getResultsBySessionId(sessionId);
-            const isAuthenticated = !!req.user;
+            // const isAuthenticated = !!req.user;
 
             const formattedResults = (results || []).map((r) => ({
                 company: r.company,
                 reagent: r.reagent,
-                catalog: isAuthenticated ? r.catalog : undefined,
+                catalog: r.catalog,
             }));
 
             return res.json({
