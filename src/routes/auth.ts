@@ -38,7 +38,9 @@ router.post(
 
             const existingUser = await findUserByGoogleId(google_user_id);
             if (existingUser) {
-                throw new HttpError(409, 4091, "User already exists");
+                return res.status(200).json({
+                    is_user: true,
+                });
             }
 
             const user = await createUser(
@@ -58,6 +60,7 @@ router.post(
             return res.status(201).json({
                 access_token: accessToken,
                 refresh_token: refreshToken,
+                is_user: false,
                 user: {
                     id: user._id,
                     name: user.name,
@@ -98,7 +101,10 @@ router.post(
 
             const user = await findUserByGoogleId(google_user_id);
             if (!user) {
-                throw new HttpError(404, 4040, "User not found");
+                // throw new HttpError(404, 4040, "User not found");
+                return res.status(200).json({
+                    is_user: false,
+                });
             }
 
             const { accessToken, refreshToken } = await issueTokens({
@@ -111,6 +117,7 @@ router.post(
             return res.json({
                 access_token: accessToken,
                 refresh_token: refreshToken,
+                is_user: true,
                 user: {
                     id: user._id,
                     name: user.name,
