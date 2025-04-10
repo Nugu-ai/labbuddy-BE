@@ -21,9 +21,9 @@ router.post(
     "/signup",
     async (req: Request, res: Response, next: NextFunction): Promise<any> => {
         try {
-            const { google_access_token, phone_number, source_path } = req.body;
+            const { google_access_token, source_path } = req.body;
 
-            if (!google_access_token || !phone_number || !source_path) {
+            if (!google_access_token || !source_path) {
                 throw new HttpError(400, 4001, "Missing required fields");
             }
 
@@ -44,7 +44,6 @@ router.post(
             const user = await createUser(
                 email,
                 google_user_id,
-                phone_number,
                 source_path,
                 name
             );
@@ -63,7 +62,6 @@ router.post(
                     id: user._id,
                     name: user.name,
                     email: user.email,
-                    phone_number: user.phone_number,
                     created_at: user.created_at,
                     source_path: user.source_path,
                     is_admin: user.is_admin,
@@ -117,7 +115,6 @@ router.post(
                     id: user._id,
                     name: user.name,
                     email: user.email,
-                    phone_number: user.phone_number,
                     created_at: user.created_at,
                     source_path: user.source_path,
                     is_admin: user.is_admin,
