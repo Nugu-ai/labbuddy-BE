@@ -1,9 +1,9 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "My API",
+        "title": "LabBuddy API",
         "version": "1.0.0",
-        "description": "A sample API"
+        "description": "LabBuddy Backend API Documentation"
     },
     "servers": [
         {
@@ -59,12 +59,10 @@
                                 "type": "object",
                                 "properties": {
                                     "google_access_token": { "type": "string" },
-                                    "phone_number": { "type": "string" },
                                     "source_path": { "type": "string" }
                                 },
                                 "required": [
                                     "google_access_token",
-                                    "phone_number",
                                     "source_path"
                                 ]
                             }
@@ -81,15 +79,13 @@
                                     "properties": {
                                         "access_token": { "type": "string" },
                                         "refresh_token": { "type": "string" },
+                                        "is_user": { "type": "boolean" },
                                         "user": {
                                             "type": "object",
                                             "properties": {
                                                 "id": { "type": "string" },
                                                 "name": { "type": "string" },
                                                 "email": { "type": "string" },
-                                                "phone_number": {
-                                                    "type": "string"
-                                                },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time"
@@ -107,8 +103,18 @@
                             }
                         }
                     },
-                    "409": {
-                        "description": "이미 존재하는 유저"
+                    "200": {
+                        "description": "이미 존재하는 유저",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "is_user": { "type": "boolean" }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -142,15 +148,13 @@
                                     "properties": {
                                         "access_token": { "type": "string" },
                                         "refresh_token": { "type": "string" },
+                                        "is_user": { "type": "boolean" },
                                         "user": {
                                             "type": "object",
                                             "properties": {
                                                 "id": { "type": "string" },
                                                 "name": { "type": "string" },
                                                 "email": { "type": "string" },
-                                                "phone_number": {
-                                                    "type": "string"
-                                                },
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time"
@@ -167,9 +171,6 @@
                                 }
                             }
                         }
-                    },
-                    "404": {
-                        "description": "유저를 찾을 수 없음"
                     }
                 }
             }
@@ -228,6 +229,26 @@
                 }
             }
         },
+        "/auth/google/callback": {
+            "get": {
+                "tags": ["auth"],
+                "summary": "Google OAuth 콜백",
+                "description": "Google OAuth 인증 후 콜백 처리",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to frontend with access token"
+                    }
+                }
+            }
+        },
         "/analyze/upload": {
             "post": {
                 "tags": ["analyze"],
@@ -260,10 +281,22 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "session_id": {
-                                            "type": "string",
-                                            "example": "a3f4d91c-7e9a-4db1-8f64-0012ef2d3c3d"
-                                        }
+                                        "session_id": { "type": "string" },
+                                        "duplicated": { "type": "boolean" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Duplicate file found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "session_id": { "type": "string" },
+                                        "duplicated": { "type": "boolean" }
                                     }
                                 }
                             }
@@ -271,9 +304,6 @@
                     },
                     "400": {
                         "description": "Missing file or invalid input"
-                    },
-                    "500": {
-                        "description": "Internal server error"
                     }
                 }
             }
@@ -301,6 +331,7 @@
                                     "type": "object",
                                     "properties": {
                                         "session_id": { "type": "string" },
+                                        "paper_name": { "type": "string" },
                                         "status": {
                                             "type": "string",
                                             "enum": [
@@ -331,8 +362,28 @@
                             }
                         }
                     },
+                    "202": {
+                        "description": "Processing in progress",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": { "type": "integer" },
+                                        "message": { "type": "string" },
+                                        "session_id": { "type": "string" },
+                                        "status": { "type": "string" },
+                                        "results": { "type": "array" }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Session not found"
+                    },
+                    "422": {
+                        "description": "LLM processing failed"
                     }
                 }
             }
