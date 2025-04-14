@@ -410,7 +410,7 @@
                                                     "email": {
                                                         "type": "string"
                                                     },
-                                                    "phone_number": {
+                                                    "name": {
                                                         "type": "string"
                                                     },
                                                     "source_path": {
