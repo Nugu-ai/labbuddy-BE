@@ -15,14 +15,12 @@ export const findUserByGoogleId = async (google_user_id: string) => {
 export const createUser = async (
     email: string,
     google_user_id: string,
-    phone_number: string,
     source_path: string,
     name?: string // ✅ 추가
 ) => {
     const newUser = new User({
         email,
         google_user_id,
-        phone_number,
         name, // ✅ 저장
         created_at: new Date(),
         source_path,
