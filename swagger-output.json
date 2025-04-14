@@ -46,11 +46,11 @@
                 }
             }
         },
-        "/auth/signup": {
+        "/auth/login": {
             "post": {
                 "tags": ["auth"],
-                "summary": "User Signup",
-                "description": "Google access token으로 유저를 신규 회원가입합니다.",
+                "summary": "User Login or Signup",
+                "description": "Google access token을 통해 로그인 또는 최초 회원가입을 처리합니다. 기존 유저이면 로그인, 새로운 유저이면 source_path를 통해 회원가입합니다.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -61,17 +61,14 @@
                                     "google_access_token": { "type": "string" },
                                     "source_path": { "type": "string" }
                                 },
-                                "required": [
-                                    "google_access_token",
-                                    "source_path"
-                                ]
+                                "required": ["google_access_token"]
                             }
                         }
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "회원가입 성공",
+                    "200": {
+                        "description": "기존 유저 로그인 성공",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -103,44 +100,8 @@
                             }
                         }
                     },
-                    "200": {
-                        "description": "이미 존재하는 유저",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "is_user": { "type": "boolean" }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/login": {
-            "post": {
-                "tags": ["auth"],
-                "summary": "User Login",
-                "description": "Google access token으로 기존 유저 로그인",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "google_access_token": { "type": "string" }
-                                },
-                                "required": ["google_access_token"]
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "로그인 성공",
+                    "201": {
+                        "description": "신규 유저 회원가입 성공",
                         "content": {
                             "application/json": {
                                 "schema": {
